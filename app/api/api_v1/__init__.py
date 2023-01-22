@@ -1,6 +1,7 @@
-from app.core.utils import VersionedAPIRouter
+from fastapi.routing import APIRouter
 
-from .routes import users
+from .routes import authentication, users
 
-router = VersionedAPIRouter(1, 0)
-router.include_router(users.router, tags=["users"], prefix="/users")
+router = APIRouter()
+router.include_router(authentication.router, tags=["Authentication"], prefix="/auth")
+router.include_router(users.router, tags=["Users"], prefix="/users")

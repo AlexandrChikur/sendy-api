@@ -4,9 +4,9 @@ from app.core.settings.app import AppSettings
 
 
 class DevAppSettings(AppSettings):
-    debug: bool = True
+    debug: bool = False
 
-    title: str = "Dev FastAPI example application"
+    title: str = "Sendy API. Development"
 
     logging_level: int = logging.DEBUG
 

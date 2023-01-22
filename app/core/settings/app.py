@@ -20,12 +20,14 @@ class AppSettings(BaseAppSettings):
     openapi_url: str = "/api/openapi.json"
     redoc_url: str = "/api/redoc"
 
-    title: str = "FastAPI example application"
-    description: str = "Description"
+    title: str = "Sendy API"
+    description: str = (
+        "Messages gateway made easy. Here is an HTTP API for work with service."
+    )
 
     database_url: PostgresDsn
-    max_connection_count: int = 10
-    min_connection_count: int = 10
+    max_connection_count: int = 50
+    min_connection_count: int = 50
 
     secret_key: SecretStr
 
