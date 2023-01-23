@@ -14,12 +14,14 @@ from app.models.schemas.users import User
 from app.resources import strings
 from app.services.sockets import publish_content
 
-ws_logging_config.set_mode(LoggingModes.LOGURU, level=get_app_settings().logging_level)
-
+ws_logging_config.set_mode(
+    LoggingModes.LOGURU, level=get_app_settings().logging_level
+)  # TODO: Not might be here
+settings = get_app_settings()
 router = APIRouter()
 
-pubsub_endpoint = PubSubEndpoint()
-pubsub_endpoint.register_route(router, "/subscribe")
+ws_endpoint = PubSubEndpoint()
+ws_endpoint.register_route(router, "/subscribe")
 
 
 # TODO: !!!!!! DOCUMENTATION EXAMPLES ETC...
@@ -48,7 +50,7 @@ async def create_message(
 ) -> Message:
     message = await messages_repo.create_message(user=user, message_body=message)
     await publish_content(
-        endpoint=pubsub_endpoint,
+        endpoint=ws_endpoint,
         topic=f"messages:/uid-{user.id}/uname-{user.username}",
         data=message,
     )
@@ -58,9 +60,7 @@ async def create_message(
     return updated_message
 
 
-@router.get(
-    "/{id}", name="messages:get-concrete-message"
-)  # TODO: !!!!!!! Maybe `fastapi_websocket_pubsub` provides functionality to receive response from socket. Can be implemented better.
+@router.get("/{id}", name="messages:get-concrete-message")
 async def get_concrete_message(
     message_id: int = Query(..., alias="id"),
     messages_repo: MessagesRepository = Depends(get_repository(MessagesRepository)),
@@ -81,8 +81,10 @@ async def get_concrete_message(
 
 
 @router.post(
-    "/{id}/received", name="messages:mark-message-as-received"
-)  # TODO: !!!!!!! Maybe `fastapi_websocket_pubsub` provides functionality to receive response from socket. Can be implemented better.
+    "/{id}/received",
+    name="messages:mark-message-as-received",
+    include_in_schema=settings.debug,
+)
 async def mark_as_received(
     message_id: int = Query(..., alias="id"),
     messages_repo: MessagesRepository = Depends(get_repository(MessagesRepository)),
@@ -106,8 +108,8 @@ async def mark_as_received(
 
 
 @router.post(
-    "/{id}/sent", name="messages:mark-message-as-sent"
-)  # TODO: !!!!!!! Maybe `fastapi_websocket_pubsub` provides functionality to receive response from socket. Can be implemented better.
+    "/{id}/sent", name="messages:mark-message-as-sent", include_in_schema=settings.debug
+)
 async def mark_as_sent(
     message_id: int = Query(..., alias="id"),
     messages_repo: MessagesRepository = Depends(get_repository(MessagesRepository)),

@@ -12,7 +12,7 @@ from app.core.settings.base import BaseAppSettings
 class AppSettings(BaseAppSettings):
     debug: bool = False
 
-    version: str = "1.1.10"
+    version: str = "1.1.11"
     api_prefix: str = "/api"
 
     docs_url: str = "/api/docs"
