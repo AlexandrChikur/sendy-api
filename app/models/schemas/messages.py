@@ -18,5 +18,5 @@ class MessageInCreate(RWSchema):
         return self._status_code
 
 
-class MessagesInReponse(RWSchema):
+class MessagesInResponse(RWSchema):
     messages: List[Message]

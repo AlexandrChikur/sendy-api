@@ -1,15 +1,20 @@
 from fastapi import APIRouter, Body, Depends, HTTPException, Query, status
 from fastapi_websocket_pubsub.pub_sub_server import PubSubEndpoint
+from fastapi_websocket_rpc.logger import LoggingModes
+from fastapi_websocket_rpc.logger import logging_config as ws_logging_config
 
 from app.api.dependencies.authentication import get_current_user_authorizer
 from app.api.dependencies.database import get_repository
+from app.core.config import get_app_settings
 from app.db.errors import EntityDoesNotExist
 from app.db.repositories.messages import MessagesRepository
 from app.models.domain.messages import Message
-from app.models.schemas.messages import MessageInCreate, MessagesInReponse
+from app.models.schemas.messages import MessageInCreate, MessagesInResponse
 from app.models.schemas.users import User
 from app.resources import strings
 from app.services.sockets import publish_content
+
+ws_logging_config.set_mode(LoggingModes.LOGURU, level=get_app_settings().logging_level)
 
 router = APIRouter()
 
@@ -21,18 +26,18 @@ pubsub_endpoint.register_route(router, "/subscribe")
 
 
 @router.get(
-    "/", response_model=MessagesInReponse, name="messages:get-messages"
+    "/", response_model=MessagesInResponse, name="messages:get-messages"
 )  # TODO: Do nice paging
 async def get_messages(
     messages_repo: MessagesRepository = Depends(get_repository(MessagesRepository)),
     sent_included: bool = Query(False),
     user: User = Depends(get_current_user_authorizer()),
-) -> MessagesInReponse:
+) -> MessagesInResponse:
     """Returns last 5000 messages"""
     msgs = await messages_repo.get_user_messages(
         user_id=user.id, sent_included=sent_included
     )
-    return MessagesInReponse(messages=msgs)
+    return MessagesInResponse(messages=msgs)
 
 
 @router.post("/create", response_model=Message, name="messages:create-message")

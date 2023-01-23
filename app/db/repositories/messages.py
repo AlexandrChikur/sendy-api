@@ -84,7 +84,6 @@ class MessagesRepository(BaseRepository):
         result = []
         for row in messages_rows:
             meta = StatusMessageMeta(**dict(row))
-            print(row)
             msg = Message(
                 **dict(row),
                 status_meta=meta,

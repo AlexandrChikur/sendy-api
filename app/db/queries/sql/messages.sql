@@ -36,7 +36,7 @@ SELECT msg.id,
        ) as numbers_arr
 FROM "public"."message" msg
     INNER JOIN "public"."status" status ON status.code = msg.status_code
-WHERE msg.user_id = 1 AND msg.status_code <= 140
+WHERE msg.user_id = :user_id AND msg.status_code <= :status_code
 ORDER BY msg.created_at DESC
 LIMIT 5000;
 

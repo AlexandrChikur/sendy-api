@@ -2,8 +2,6 @@ import logging
 import sys
 from typing import Any, Dict, List, Tuple
 
-from fastapi_websocket_rpc.logger import LoggingModes
-from fastapi_websocket_rpc.logger import logging_config as ws_logging_config
 from loguru import logger
 from pydantic import PostgresDsn, SecretStr
 
@@ -14,7 +12,7 @@ from app.core.settings.base import BaseAppSettings
 class AppSettings(BaseAppSettings):
     debug: bool = False
 
-    version: str = "1.1.0"
+    version: str = "1.1.10"
     api_prefix: str = "/api"
 
     docs_url: str = "/api/docs"
@@ -63,4 +61,3 @@ class AppSettings(BaseAppSettings):
             logging_logger.handlers = [InterceptHandler(level=self.logging_level)]
 
         logger.configure(handlers=[{"sink": sys.stderr, "level": self.logging_level}])
-        ws_logging_config.set_mode(LoggingModes.LOGURU, level=self.logging_level)
