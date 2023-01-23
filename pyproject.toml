@@ -4,7 +4,7 @@ version = "1.0.0"
 description = ""
 authors = ["Alexandr Chikur <alexandr.chikur@mail.ru>"]
 readme = "README.md"
-packages = [{include = "sendy_api"}]
+packages = [{include = "app"}]
 
 [tool.poetry.dependencies]
 python = "^3.10"
