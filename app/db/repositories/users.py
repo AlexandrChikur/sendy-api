@@ -1,7 +1,7 @@
 from app.db.errors import EntityDoesNotExist
 from app.db.queries.queries import queries
 from app.db.repositories.base import BaseRepository
-from app.models.schemas.users import UserInDB
+from app.models.domain.users import UserInDB
 
 
 class UsersRepository(BaseRepository):

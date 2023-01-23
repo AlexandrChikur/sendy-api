@@ -10,3 +10,8 @@ class JWTMeta(BaseModel):
 
 class JWTUser(BaseModel):
     username: str
+
+
+class JWTToken(BaseModel):
+    token: str
+    meta: JWTMeta

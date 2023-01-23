@@ -1,11 +1,13 @@
 # API messages
 
 USER_DOES_NOT_EXIST_ERROR = "user does not exist"
+MESSAGE_DOES_NOT_EXIST_ERROR = "message does not exist"
 USER_INACTIVE_ERROR = "user is not active"
 
 INCORRECT_LOGIN_INPUT = "incorrect email or password"
 USERNAME_TAKEN = "user with this username already exists"
 EMAIL_TAKEN = "user with this email already exists"
+NOT_OBJECT_OWNER = "user is not the owner of the object he is trying to access"
 
 WRONG_TOKEN_PREFIX = "unsupported authorization type"  # noqa: S105
 MALFORMED_PAYLOAD = "could not validate credentials"

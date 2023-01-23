@@ -4,7 +4,7 @@ from app.core.settings.app import AppSettings
 
 
 class DevAppSettings(AppSettings):
-    debug: bool = False
+    debug: bool = True
 
     title: str = "Sendy API. Development"
 
