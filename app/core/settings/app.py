@@ -7,13 +7,14 @@ from loguru import logger
 from pydantic import PostgresDsn, SecretStr
 
 from app.core.logging import InterceptHandler
+from app.core.logging import rotator
 from app.core.settings.base import BaseAppSettings
 
 
 class AppSettings(BaseAppSettings):
     debug: bool = False
 
-    version: str = "1.2.1"
+    version: str = "1.2.2"
     api_prefix: str = "/api"
 
     docs_url: str = "/api/docs"
@@ -78,7 +79,7 @@ class AppSettings(BaseAppSettings):
                 {
                     "sink": self.path_to_logfile,
                     "level": self.logging_level,
-                    "rotation": "250 MB",
+                    "rotation": rotator.should_rotate,
                     "retention": "10 days",
                     "compression": "zip",
                     "backtrace": True,
