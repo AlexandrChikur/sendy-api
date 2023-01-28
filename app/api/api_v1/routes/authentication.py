@@ -69,13 +69,16 @@ async def login(
     token_exp_minutes: int = Query(
         None,
         alias="expires_minutes",
+        ge=5,
+        le=129600,  # 3 months
         description="Token will expire after provided minutes if it's provided",
     ),
     users_repo: UsersRepository = Depends(get_repository(UsersRepository)),
     settings: AppSettings = Depends(get_app_settings),
 ) -> UserWithToken:
-    """Get user's JWT token authentication interface.\n
-    Default token expired in: **3 weeks**
+    """ Get user's JWT token authentication interface.\n
+        Creation token with your own expiration value is able only in range from 5 min to 129600 (3 months)
+        Default token expired in: **3 weeks**
     """
     wrong_login_error = HTTPException(
         status_code=HTTP_400_BAD_REQUEST,
