@@ -1,8 +1,11 @@
+import datetime
 import logging
+from io import TextIOWrapper
 from types import FrameType
 from typing import cast
 
 from loguru import logger
+from loguru._handler import Message
 
 
 class InterceptHandler(logging.Handler):
@@ -23,3 +26,33 @@ class InterceptHandler(logging.Handler):
             level,
             record.getMessage(),
         )
+
+
+class Rotator:
+    """ Class for rotating the log file when the current
+        time is past the target time or when the file size is too large
+    """
+
+    def __init__(self, *, size: float, at: datetime.time) -> None:
+        now = datetime.datetime.now()
+
+        self._size_limit = size
+        self._time_limit = now.replace(hour=at.hour, minute=at.minute, second=at.second)
+
+        if now >= self._time_limit:
+            # The current time is already past the target time so it would rotate already.
+            # Add one day to prevent an immediate rotation.
+            self._time_limit += datetime.timedelta(days=1)
+
+    def should_rotate(self, message: Message, file: TextIOWrapper):
+        file.seek(0, 2)
+        if file.tell() + len(message) > self._size_limit:
+            return True
+        if message.record["time"].timestamp() > self._time_limit.timestamp():
+            self._time_limit += datetime.timedelta(days=1)
+            return True
+        return False
+
+
+# 500 MB or each midnight
+rotator = Rotator(size=5e+8, at=datetime.time(0, 0, 0))
