@@ -1,5 +1,6 @@
+import functools
 from datetime import datetime, timedelta
-from typing import Dict
+from typing import Any, Callable, Dict
 
 import jwt
 from pydantic import ValidationError
@@ -9,7 +10,7 @@ from app.models.schemas.users import User
 
 JWT_ACCESS_SUBJECT = "access"
 ALGORITHM = "HS256"
-ACCESS_TOKEN_EXPIRE_TD = timedelta(weeks=3)  # three weeks
+ACCESS_TOKEN_EXPIRE_TD = timedelta(weeks=3)
 
 
 def create_jwt_token(
@@ -41,10 +42,24 @@ def create_access_token_for_user(
     )
 
 
+def handle_jwt(func: Callable) -> Callable:
+    @functools.wraps(func)
+    def wrapper(*args, **kwargs) -> Any:
+        try:
+            return func(*args, **kwargs)
+        except jwt.PyJWTError as decode_error:
+            raise ValueError("Unable to decode JWT token") from decode_error
+        except ValidationError as validation_error:
+            raise ValueError("Malformed payload in token") from validation_error
+
+    return wrapper
+
+
+@handle_jwt
 def get_username_from_token(token: str, secret_key: str) -> str:
-    try:
-        return JWTUser(**jwt.decode(token, secret_key, algorithms=[ALGORITHM])).username
-    except jwt.PyJWTError as decode_error:
-        raise ValueError("Unable to decode JWT token") from decode_error
-    except ValidationError as validation_error:
-        raise ValueError("Malformed payload in token") from validation_error
+    return JWTUser(**jwt.decode(token, secret_key, algorithms=[ALGORITHM])).username
+
+
+@handle_jwt
+def get_token_meta(token: str, secret_key: str) -> JWTMeta:
+    return JWTMeta(**jwt.decode(token, secret_key, algorithms=[ALGORITHM]))

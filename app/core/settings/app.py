@@ -1,5 +1,6 @@
 import logging
 import sys
+from pathlib import Path
 from typing import Any, Dict, List, Tuple
 
 from loguru import logger
@@ -12,7 +13,7 @@ from app.core.settings.base import BaseAppSettings
 class AppSettings(BaseAppSettings):
     debug: bool = False
 
-    version: str = "1.1.10"
+    version: str = "1.2.1"
     api_prefix: str = "/api"
 
     docs_url: str = "/api/docs"
@@ -35,7 +36,13 @@ class AppSettings(BaseAppSettings):
 
     allowed_hosts: List[str] = ["*"]
 
-    logging_level: int = logging.INFO
+    logging_level: str = "INFO"
+    logging_dir_path: Path = "./"
+
+    @property
+    def path_to_logfile(self) -> Path:
+        return self.logging_dir_path.joinpath("{time:YYYY-MM-DD}_sendy.log")
+
     loggers: Tuple[str, str] = ("uvicorn.asgi", "uvicorn.access")
 
     class Config:
@@ -60,4 +67,22 @@ class AppSettings(BaseAppSettings):
             logging_logger = logging.getLogger(logger_name)
             logging_logger.handlers = [InterceptHandler(level=self.logging_level)]
 
-        logger.configure(handlers=[{"sink": sys.stderr, "level": self.logging_level}])
+        logger.configure(
+            handlers=[
+                {
+                    "sink": sys.stderr,
+                    "level": self.logging_level,
+                    "diagnose": False,
+                    "backtrace": True,
+                },
+                {
+                    "sink": self.path_to_logfile,
+                    "level": self.logging_level,
+                    "rotation": "250 MB",
+                    "retention": "10 days",
+                    "compression": "zip",
+                    "backtrace": True,
+                    "diagnose": True,
+                },
+            ]
+        )

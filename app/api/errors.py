@@ -52,8 +52,8 @@ validation_error_response_definition["properties"] = {
 
 async def internal_error_handler(request: Request, exc: Exception) -> JSONResponse:
     error_link_id = uuid.uuid4()
-    logger.error(
-        f"Got unexpected error with id-{error_link_id}, err: {exc}. URL: {request.url}"
+    logger.exception(
+        f"Got an unexpected error with id-{error_link_id}, err: {exc}. URL: {request.url}"
     )
     client_message = f"{_capitalize_first_words(strings.INTERNAL_ERROR_MESSAGE)}. Error ID: {error_link_id}. Give it to support."
     return JSONResponse(
