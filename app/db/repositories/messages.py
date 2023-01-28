@@ -3,7 +3,7 @@ from typing import List
 from app.db.errors import EntityDoesNotExist
 from app.db.queries.queries import queries
 from app.db.repositories.base import BaseRepository
-from app.models.domain.messages import Message, PhoneNumber, StatusMessageMeta
+from app.models.domain.messages import Message, StatusMessageMeta
 from app.models.schemas.messages import MessageInCreate
 from app.models.schemas.users import User
 
@@ -17,17 +17,17 @@ class MessagesRepository(BaseRepository):
             message_meta = StatusMessageMeta(**dict(message_row))
             return Message(
                 **dict(message_row),
-                numbers=[PhoneNumber(number=n) for n in message_row["numbers_arr"]],
+                numbers=[n for n in message_row["numbers_arr"]],
                 status_meta=message_meta,
             )
 
         raise EntityDoesNotExist(f"Message with ID: {message_id} does not exist")
 
-    async def get_message_numbers_by_id(self, message_id: int) -> List[PhoneNumber]:
+    async def get_message_numbers_by_id(self, message_id: int) -> List[str]:
         phones_rows = await queries.get_message_numbers(
             self.connection, message_id=message_id
         )
-        return [PhoneNumber(**dict(row)) for row in phones_rows]
+        return [row["number"] for row in phones_rows]
 
     async def create_message(
         self, *, user: User, message_body: MessageInCreate
@@ -44,9 +44,9 @@ class MessagesRepository(BaseRepository):
             )
             message = message.copy(update=dict(message_row))
             numbers_rows = []
-            for n in message.numbers:
+            for n in message.numbers:  # TODO: Check how to do it as a bulk insert
                 row = await queries.create_message_number(
-                    self.connection, number=n.number, message_id=message.id
+                    self.connection, number=n, message_id=message.id
                 )
                 numbers_rows.append(row)
         return await self.get_message_by_id(message_id=message.id)
@@ -87,7 +87,7 @@ class MessagesRepository(BaseRepository):
             msg = Message(
                 **dict(row),
                 status_meta=meta,
-                numbers=[PhoneNumber(number=n) for n in row["numbers_arr"]],
+                numbers=[n for n in row["numbers_arr"]],
             )
             result.append(msg)
 

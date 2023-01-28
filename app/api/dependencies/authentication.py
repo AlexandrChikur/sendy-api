@@ -11,7 +11,8 @@ from app.core.config import get_app_settings
 from app.core.settings.app import AppSettings
 from app.db.errors import EntityDoesNotExist
 from app.db.repositories.users import UsersRepository
-from app.models.schemas.users import User
+from app.models.schemas.jwt import JWTToken
+from app.models.schemas.users import User, UserWithToken
 from app.resources import strings
 from app.services import jwt
 
@@ -79,7 +80,7 @@ async def _get_current_user(
     users_repo: UsersRepository = Depends(get_repository(UsersRepository)),
     token: str = Depends(_get_authorization_header_retriever()),
     settings: AppSettings = Depends(get_app_settings),
-) -> User:
+) -> UserWithToken:
     try:
         username = jwt.get_username_from_token(
             token,
@@ -98,7 +99,15 @@ async def _get_current_user(
                 status_code=status.HTTP_403_FORBIDDEN,
                 detail=strings.USER_INACTIVE_ERROR,
             )
-        return user
+        return UserWithToken(
+            **user.dict(),
+            token=JWTToken(
+                token=token,
+                meta=jwt.get_token_meta(
+                    token=token, secret_key=str(settings.secret_key.get_secret_value())
+                ),
+            ),
+        )
     except EntityDoesNotExist:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,

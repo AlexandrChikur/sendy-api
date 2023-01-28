@@ -1,4 +1,6 @@
-from fastapi import APIRouter, Body, Depends, HTTPException
+import datetime
+
+from fastapi import APIRouter, Body, Depends, HTTPException, Query
 from starlette.status import HTTP_400_BAD_REQUEST
 
 from app.api.dependencies.database import get_repository
@@ -9,17 +11,27 @@ from app.db.repositories.users import UsersRepository
 from app.models.schemas.users import UserInCreate, UserInLogin, UserWithToken
 from app.resources import strings
 from app.services import jwt
-from app.services.authentication import check_email_is_taken, check_username_is_taken
+from app.services.authentication import (check_email_is_taken,
+                                         check_username_is_taken)
 
 router = APIRouter()
+settings = get_app_settings()
 
 
-@router.post("/signup", response_model=UserWithToken, name="auth:create-user")
+@router.post(
+    "/signup",
+    response_model=UserWithToken,
+    name="auth:create-user",
+    summary="Create user (Sign Up)",
+    tags=["Internal"],
+    include_in_schema=settings.debug,
+)
 async def register(
     user_create: UserInCreate = Body(...),
     users_repo: UsersRepository = Depends(get_repository(UsersRepository)),
     settings: AppSettings = Depends(get_app_settings),
 ) -> UserWithToken:
+    """Sign up user interface"""
     if await check_username_is_taken(users_repo, user_create.username):
         raise HTTPException(
             status_code=HTTP_400_BAD_REQUEST,
@@ -46,12 +58,25 @@ async def register(
     )
 
 
-@router.post("/token", response_model=UserWithToken, name="auth:token")
+@router.post(
+    "/token",
+    response_model=UserWithToken,
+    name="auth:token",
+    summary="Get user token for authentication",
+)
 async def login(
     user_login: UserInLogin = Body(...),
+    token_exp_minutes: int = Query(
+        None,
+        alias="expires_minutes",
+        description="Token will expire after provided minutes if it's provided",
+    ),
     users_repo: UsersRepository = Depends(get_repository(UsersRepository)),
     settings: AppSettings = Depends(get_app_settings),
 ) -> UserWithToken:
+    """Get user's JWT token authentication interface.\n
+    Default token expired in: **3 weeks**
+    """
     wrong_login_error = HTTPException(
         status_code=HTTP_400_BAD_REQUEST,
         detail=strings.INCORRECT_LOGIN_INPUT,
@@ -65,10 +90,17 @@ async def login(
     if not user.check_password(user_login.password):
         raise wrong_login_error
 
-    token = jwt.create_access_token_for_user(
-        user,
-        str(settings.secret_key.get_secret_value()),
-    )
+    if token_exp_minutes:
+        token = jwt.create_access_token_for_user(
+            user,
+            str(settings.secret_key.get_secret_value()),
+            expires_td=datetime.timedelta(minutes=token_exp_minutes),
+        )
+    else:
+        token = jwt.create_access_token_for_user(
+            user,
+            str(settings.secret_key.get_secret_value()),
+        )
 
     return UserWithToken(
         id=user.id,

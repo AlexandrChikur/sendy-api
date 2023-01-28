@@ -1,14 +1,14 @@
+from typing import Any
+
 from fastapi import FastAPI
 from fastapi.exceptions import RequestValidationError
 from starlette.exceptions import HTTPException
 from starlette.middleware.cors import CORSMiddleware
+from starlette.responses import RedirectResponse
 
 from app.api import router as api_router
-from app.api.errors import (
-    http422_error_handler,
-    http_error_handler,
-    internal_error_handler,
-)
+from app.api.errors import (http422_error_handler, http_error_handler,
+                            internal_error_handler)
 from app.core.config import get_app_settings
 from app.core.events import create_start_app_handler, create_stop_app_handler
 
@@ -46,3 +46,8 @@ def get_application() -> FastAPI:
 
 
 app = get_application()
+
+
+@app.get("/", include_in_schema=False)
+async def home_page() -> Any:
+    return RedirectResponse(url=get_app_settings().docs_url)
